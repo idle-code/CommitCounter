@@ -7,6 +7,8 @@ authors = ["Pawel Zukowski <p.z.idlecode@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 PyGithub = "^1.53"
+flask = "^1.1.2"
+python-dotenv = "^0.14.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

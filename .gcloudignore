@@ -1,0 +1,11 @@
+.gcloudignore
+deploy.sh
+.env
+.git
+.gitignore
+.idea
+poetry.lock
+pyproject.toml
+README.md
+.venv
+
