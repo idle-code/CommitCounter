@@ -1,6 +1,6 @@
 .gcloudignore
 deploy.sh
-.env
+.env.yaml
 .git
 .gitignore
 .idea
