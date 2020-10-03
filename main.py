@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from pathlib import Path
-from flask import Request
+from flask import Request, render_template
 import datetime
 from pydantic import BaseSettings
 
@@ -32,13 +32,11 @@ def on_request_received(req: Request):
 
     commits = fetch_commits()
 
-    # TODO: generate proper Jinja template
-
     commits_message = ""
     for c in commits:
         commits_message += f"{c.url}</br>"
 
-    return f"<html><body>{commits_message}</body></html>"
+    return render_template("index.jinja2.html", settings=settings, commits=commits)
 
 
 def fetch_commits():
