@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 from pathlib import Path
-from typing import List
-
 from flask import Request
-from datetime import date
+import datetime
 
 from pydantic_settings import BaseSettingsModel, load_settings
 
@@ -13,31 +11,60 @@ class AppSettings(BaseSettingsModel):
     DEBUG: bool = False
 
     # GitHub access token
-    GITHUB_ACCESS_TOKEN: str = "<YOUR_TOKEN_GOES_HERE>"
-
-    # List of repositories to track in "<user>/<repository>" format separated by a colon ':' character
-    REPOS_TO_WATCH: str = "user1/repo1:user2/repo2"
-
-    @property
-    def REPOS_TO_WATCH_LIST(self) -> List[str]:
-        return self.REPOS_TO_WATCH.split(":")
+    GITHUB_ACCESS_TOKEN: str
 
     # Challenge start and end dates in YYYY-MM-DD format
-    START_DATE: date = date.fromisoformat("2020-10-10")
-    END_DATE: date = date.fromisoformat("2021-10-10")
+    START_DATE: datetime.datetime = datetime.datetime.now()
+    END_DATE: datetime.datetime = datetime.datetime.now() + datetime.timedelta(days=365)
 
     # Commits required in challenge
     REQUIRED_COMMIT_COUNT: int = 365
 
-    class Config:
-        env_prefix = "CHALLENGE"
-
 
 def on_request_received(req: Request):
-    request_json = req.get_json()
+    if "days" in req.args:
+        days_to_display = int(req.args["days"])
+        settings.END_DATE = datetime.datetime.now()
+        settings.START_DATE = datetime.datetime.now() - datetime.timedelta(days=days_to_display)
 
     print(f"Start date: {settings.START_DATE}")
-    return f"Repos to watch: {', '.join(settings.REPOS_TO_WATCH_LIST)}"
+    print(f"End date: {settings.END_DATE}")
+
+    commits = fetch_commits()
+
+    # TODO: generate proper Jinja template
+
+    commits_message = ""
+    for c in commits:
+        commits_message += f"{c.url}</br>"
+
+    return f"<html><body>{commits_message}</body></html>"
+
+
+def fetch_commits():
+    from github import Github
+    github = Github(settings.GITHUB_ACCESS_TOKEN)
+
+    user = github.get_user()
+    print(f"Looking for repos of user: {user}")
+    repositories = user.get_repos()
+    print(f"Found {repositories.totalCount} repositories")
+
+    all_commits = []
+    for repo in repositories:
+        commits_in_repo = fetch_commits_in_repo(repo)
+        if commits_in_repo:
+            print(f"Adding {len(commits_in_repo)} commits")
+            all_commits.extend(commits_in_repo)
+
+    print(f"Total commits in found all repositories: {len(all_commits)}")
+    return all_commits
+
+
+def fetch_commits_in_repo(repo):
+    print(f"Checking repository {repo}...")
+    commits_in_repo = repo.get_commits(since=settings.START_DATE, until=settings.END_DATE, author=repo.owner)
+    return list(commits_in_repo)
 
 
 def serve_flask_endpoint(endpoint):
