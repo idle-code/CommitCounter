@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from pathlib import Path
 from flask import Request, render_template
 import datetime
 from pydantic import BaseSettings
@@ -15,13 +14,13 @@ class AppSettings(BaseSettings):
     # Commits required in challenge
     REQUIRED_COMMIT_COUNT: int = 365
 
-    # Challenge start and end dates in YYYY-MM-DD format
+    # Challenge time range
     END_DATE: datetime.datetime = datetime.datetime.now()
     START_DATE: datetime.datetime = END_DATE - datetime.timedelta(days=REQUIRED_COMMIT_COUNT)
 
 
 def on_request_received(req: Request):
-    if "days" in req.args:
+    if "days" in req.args:  # TODO: remove if not used
         days_to_display = int(req.args["days"])
         print(f"Looking only {days_to_display} days behind")
         settings.END_DATE = datetime.datetime.now()
