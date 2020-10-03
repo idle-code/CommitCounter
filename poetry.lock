@@ -8,7 +8,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "1.4.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Classes Without Boilerplate"
 name = "attrs"
 optional = false
@@ -36,17 +36,6 @@ name = "chardet"
 optional = false
 python-versions = "*"
 version = "3.0.4"
-
-[[package]]
-category = "main"
-description = "Extract attributes docstrings defined in various ways"
-name = "class-doc"
-optional = false
-python-versions = ">=3.6,<4.0"
-version = "0.2.0b0"
-
-[package.dependencies]
-more-itertools = ">=7.2,<8.0"
 
 [[package]]
 category = "main"
@@ -137,7 +126,7 @@ python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 version = "1.1.1"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "More routines for operating on iterables, beyond itertools"
 name = "more-itertools"
 optional = false
@@ -187,22 +176,6 @@ version = "1.6.1"
 dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 typing_extensions = ["typing-extensions (>=3.7.2)"]
-
-[[package]]
-category = "main"
-description = "Hipster-orgazmic tool to mange application settings"
-name = "pydantic-settings"
-optional = false
-python-versions = ">=3.6,<4.0"
-version = "0.2.5"
-
-[package.dependencies]
-attrs = ">=19.1,<20.0"
-class-doc = "0.2.0b"
-pydantic = "*"
-pyyaml = ">=5.1.2,<6.0.0"
-tomlkit = ">=0.5.5,<0.6.0"
-typing-extensions = ">=3.7.4,<4.0.0"
 
 [[package]]
 category = "main"
@@ -299,22 +272,6 @@ version = "1.15.0"
 
 [[package]]
 category = "main"
-description = "Style preserving TOML library"
-name = "tomlkit"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.5.11"
-
-[[package]]
-category = "main"
-description = "Backported and Experimental Type Hints for Python 3.5+"
-name = "typing-extensions"
-optional = false
-python-versions = "*"
-version = "3.7.4.3"
-
-[[package]]
-category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
@@ -355,7 +312,7 @@ python-versions = "*"
 version = "1.12.1"
 
 [metadata]
-content-hash = "64c3571031ffb105f6b1a97d5a47c2531ba2bf66e8a949bebe916bbbb55ab564"
+content-hash = "c6ceac0155a76fea59576b6615fe5c1708fcc791dde464e00154af76f0c43986"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -374,10 +331,6 @@ certifi = [
 chardet = [
     {file = "chardet-3.0.4-py2.py3-none-any.whl", hash = "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"},
     {file = "chardet-3.0.4.tar.gz", hash = "sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"},
-]
-class-doc = [
-    {file = "class-doc-0.2.0b0.tar.gz", hash = "sha256:ec3add94416f70f6a682440b6649f52132eb5015e847cbbc8f85df601aa75f84"},
-    {file = "class_doc-0.2.0b0-py3-none-any.whl", hash = "sha256:df9fcd0bba659e0fb491769bc4c9e2619ce571d392960c4def6f5472ba76cf64"},
 ]
 click = [
     {file = "click-7.1.2-py2.py3-none-any.whl", hash = "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"},
@@ -477,10 +430,6 @@ pydantic = [
     {file = "pydantic-1.6.1-py36.py37.py38-none-any.whl", hash = "sha256:b5b3489cb303d0f41ad4a7390cf606a5f2c7a94dcba20c051cd1c653694cb14d"},
     {file = "pydantic-1.6.1.tar.gz", hash = "sha256:54122a8ed6b75fe1dd80797f8251ad2063ea348a03b77218d73ea9fe19bd4e73"},
 ]
-pydantic-settings = [
-    {file = "pydantic-settings-0.2.5.tar.gz", hash = "sha256:a0657303cd61a4ff1f43a04053032379ee8e8a9559998863da59144840590e70"},
-    {file = "pydantic_settings-0.2.5-py3-none-any.whl", hash = "sha256:347991a2d96674dc9a412b6306d2fa1d84605e16d5180b04763ec4280116dbee"},
-]
 pygithub = [
     {file = "PyGithub-1.53-py3-none-any.whl", hash = "sha256:8ad656bf79958e775ec59f7f5a3dbcbadac12147ae3dc42708b951064096af15"},
     {file = "PyGithub-1.53.tar.gz", hash = "sha256:776befaddab9d8fddd525d52a6ca1ac228cf62b5b1e271836d766f4925e1452e"},
@@ -517,15 +466,6 @@ requests = [
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
     {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
-]
-tomlkit = [
-    {file = "tomlkit-0.5.11-py2.py3-none-any.whl", hash = "sha256:4e1bd6c9197d984528f9ff0cc9db667c317d8881288db50db20eeeb0f6b0380b"},
-    {file = "tomlkit-0.5.11.tar.gz", hash = "sha256:f044eda25647882e5ef22b43a1688fb6ab12af2fc50e8456cdfc751c873101cf"},
-]
-typing-extensions = [
-    {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},
-    {file = "typing_extensions-3.7.4.3-py3-none-any.whl", hash = "sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918"},
-    {file = "typing_extensions-3.7.4.3.tar.gz", hash = "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c"},
 ]
 urllib3 = [
     {file = "urllib3-1.25.10-py2.py3-none-any.whl", hash = "sha256:e7983572181f5e1522d9c98453462384ee92a0be7fac5f1413a1e35c56cc0461"},
