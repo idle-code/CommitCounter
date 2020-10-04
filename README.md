@@ -33,6 +33,13 @@ It can be easily deployed as Google Cloud Function.
 7. Visit function endpoint with webbrowser and start coding!
 
 ## ToDo/Backlog
+- [ ] Display challenge info
+    - [ ] Start/end date
+    - [ ] Commits left
+    - [ ] Days to go
+    - [ ] Current progress
+    - [ ] Nice progress bar
+- [ ] Group commits shown by date and repository
 - [ ] Serve placeholder site when visiting root page and update commit data interactively.
 - [ ] Add setting for holding repo blacklist - repositories that should not count in the challenge.
 - [ ] Rename `START_DATE`/`END_DATE` to `CHALLENGE_START`/`CHALLENGE_END`.

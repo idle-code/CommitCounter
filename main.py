@@ -30,12 +30,19 @@ def on_request_received(req: Request):
     print(f"End date: {settings.END_DATE}")
 
     commits = fetch_commits()
+    #commits = []
 
     commits_message = ""
     for c in commits:
         commits_message += f"{c.url}</br>"
 
-    return render_template("index.jinja2.html", settings=settings, commits=commits)
+    return render_template("index.jinja2.html", challenge={
+        "today": datetime.datetime.now(),
+        "start": settings.START_DATE,
+        "end": settings.END_DATE,
+        "commits_to_make": settings.REQUIRED_COMMIT_COUNT,
+        "commits_done": len(commits),
+    }, commits=commits)
 
 
 def fetch_commits():

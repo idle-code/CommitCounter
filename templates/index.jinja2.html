@@ -1,10 +1,88 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
     <title>365 Commits Challenge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <style type="text/css">
+.bar-step {
+    position:absolute;
+    margin-top:-20px;
+	z-index:1;
+    font-size:12px;
+}
+
+.label-txt {
+    float: left;
+}
+
+.label-line {
+    float: right;
+    background: #000;
+    height:50px;
+	width:1px;
+    margin-left: 5px;
+}
+
+.label-percent {
+    float: right;
+    margin-left: 5px;
+}
+    </style>
 </head>
 <body>
-    <h1>{{ settings.START_DATE }}</h1>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm">
+                <p>Days left</p>
+            </div>
+            <div class="col-sm">
+                <p>{{ (challenge.end - challenge.today).days }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm">
+                <p>Commits left</p>
+            </div>
+            <div class="col-sm">
+                <p>{{ challenge.commits_to_make - challenge.commits_done }}</p>
+            </div>
+        </div>
+        {% set progress_percentage = 100 * challenge.commits_done / challenge.commits_to_make %}
+        {% set challenge_total_days = (challenge.end - challenge.start).days %}
+        {% set commits_per_day = challenge.commits_to_make / challenge_total_days %}
+        {% set challenge_days_done = (challenge.today - challenge.start).days %}
+        {% set expected_commit_count = (commits_per_day * challenge_days_done)|int %}
+        {% set desired_progress_percentage = 100 * expected_commit_count / challenge.commits_to_make %}
+        {% set commit_difference = challenge.commits_done - expected_commit_count %}
+        <div class="row">
+            <div class="col-sm">
+                <p>Difference</p>
+            </div>
+            <div class="col-sm">
+                {% if commit_difference > 0 %}
+                <p>+{{ commit_difference }}</p>
+                {% else %}
+                <p>{{ commit_difference }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row"><br>
+            <div class="col-sm">
+                <div class="progress">
+                    <div class="bar-step" style="left: {{ desired_progress_percentage|int }}%">
+                        <div class="label-txt">Expected commit count</div>
+                        <div class="label-percent">{{ expected_commit_count|int }} - {{ desired_progress_percentage|int }}%</div>
+                        <div class="label-line"></div>
+                    </div>
+                    <div class="progress-bar progress-bar-success" style="width: {{ progress_percentage|int }}%;">{{ progress_percentage|int }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
