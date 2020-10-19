@@ -51,6 +51,7 @@
                 <p>{{ challenge.commits_to_make - challenge.commits_done }}</p>
             </div>
         </div>
+        {# TODO: use variables from passed context  #}
         {% set progress_percentage = 100 * challenge.commits_done / challenge.commits_to_make %}
         {% set challenge_total_days = (challenge.end - challenge.start).days %}
         {% set commits_per_day = challenge.commits_to_make / challenge_total_days %}

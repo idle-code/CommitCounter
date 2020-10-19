@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Request, render_template
+from flask import Request, render_template, jsonify
 import datetime
 from pydantic import BaseSettings
 
@@ -30,19 +30,32 @@ def on_request_received(req: Request):
     print(f"End date: {settings.END_DATE}")
 
     commits = fetch_commits()
-    #commits = []
 
     commits_message = ""
     for c in commits:
         commits_message += f"{c.url}</br>"
 
-    return render_template("index.jinja2.html", challenge={
-        "today": datetime.datetime.now(),
+    today = datetime.datetime.now()
+    commits_per_day = settings.REQUIRED_COMMIT_COUNT / (settings.END_DATE - settings.START_DATE).days
+    challenge_days_done = (today - settings.START_DATE).days
+    commits_done = len(commits)
+    expected_commit_count = int(commits_per_day * challenge_days_done)
+    challenge_data = {
+        "today": today,
         "start": settings.START_DATE,
         "end": settings.END_DATE,
+        "days_left": (settings.END_DATE - today).days,
+        "progress_percentage": 100 * commits_done / settings.REQUIRED_COMMIT_COUNT,
+        "expected_commit_count": expected_commit_count,
         "commits_to_make": settings.REQUIRED_COMMIT_COUNT,
-        "commits_done": len(commits),
-    }, commits=commits)
+        "commits_done": commits_done,
+        "commit_difference": commits_done - expected_commit_count
+    }
+
+    if "json" in req.args:
+        return jsonify(challenge_data)
+    else:
+        return render_template("index.jinja2.html", challenge=challenge_data, commits=commits)
 
 
 def fetch_commits():
