@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from enum import Enum
+
 from flask import Request, render_template, jsonify
 import datetime
 from pydantic import BaseSettings
@@ -19,6 +21,13 @@ class AppSettings(BaseSettings):
     START_DATE: datetime.datetime = END_DATE - datetime.timedelta(days=REQUIRED_COMMIT_COUNT)
 
 
+class ChallengeStatus(Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 def on_request_received(req: Request):
     if "days" in req.args:  # TODO: remove if not used
         days_to_display = int(req.args["days"])
@@ -36,20 +45,37 @@ def on_request_received(req: Request):
         commits_message += f"{c.url}</br>"
 
     today = datetime.datetime.now()
+
     commits_per_day = settings.REQUIRED_COMMIT_COUNT / (settings.END_DATE - settings.START_DATE).days
     challenge_days_done = (today - settings.START_DATE).days
     commits_done = len(commits)
     expected_commit_count = int(commits_per_day * challenge_days_done)
+
+    if today < settings.START_DATE:
+        # TODO: Before start there is no need to fetch commits
+        status = ChallengeStatus.PENDING
+        days_left = (settings.START_DATE - today).days
+    elif today < settings.END_DATE:
+        status = ChallengeStatus.IN_PROGRESS
+        days_left = (settings.END_DATE - today).days
+    elif commits_done > settings.REQUIRED_COMMIT_COUNT:
+        status = ChallengeStatus.SUCCEEDED
+        days_left = (today - settings.END_DATE).days
+    else:
+        status = ChallengeStatus.FAILED
+        days_left = (today - settings.END_DATE).days
+
     challenge_data = {
         "today": today,
         "start": settings.START_DATE,
         "end": settings.END_DATE,
-        "days_left": (settings.END_DATE - today).days,
+        "days_left": days_left,
         "progress_percentage": 100 * commits_done / settings.REQUIRED_COMMIT_COUNT,
         "expected_commit_count": expected_commit_count,
         "commits_to_make": settings.REQUIRED_COMMIT_COUNT,
         "commits_done": commits_done,
-        "commit_difference": commits_done - expected_commit_count
+        "commit_difference": commits_done - expected_commit_count,
+        "status": status.value
     }
 
     if "json" in req.args:
