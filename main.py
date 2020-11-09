@@ -38,7 +38,10 @@ def on_request_received(req: Request):
     print(f"Start date: {settings.START_DATE}")
     print(f"End date: {settings.END_DATE}")
 
-    commits = fetch_commits()
+    if settings.DEBUG:
+        commits = []
+    else:
+        commits = fetch_commits()
 
     commits_message = ""
     for c in commits:
@@ -55,12 +58,12 @@ def on_request_received(req: Request):
         # TODO: Before start there is no need to fetch commits
         status = ChallengeStatus.PENDING
         days_left = (settings.START_DATE - today).days
+    elif commits_done >= settings.REQUIRED_COMMIT_COUNT:
+        status = ChallengeStatus.SUCCEEDED
+        days_left = (today - settings.END_DATE).days
     elif today < settings.END_DATE:
         status = ChallengeStatus.IN_PROGRESS
         days_left = (settings.END_DATE - today).days
-    elif commits_done > settings.REQUIRED_COMMIT_COUNT:
-        status = ChallengeStatus.SUCCEEDED
-        days_left = (today - settings.END_DATE).days
     else:
         status = ChallengeStatus.FAILED
         days_left = (today - settings.END_DATE).days
@@ -71,6 +74,7 @@ def on_request_received(req: Request):
         "end": settings.END_DATE,
         "days_left": days_left,
         "progress_percentage": 100 * commits_done / settings.REQUIRED_COMMIT_COUNT,
+        "expected_progress_percentage": 100 * expected_commit_count / settings.REQUIRED_COMMIT_COUNT,
         "expected_commit_count": expected_commit_count,
         "commits_to_make": settings.REQUIRED_COMMIT_COUNT,
         "commits_done": commits_done,
