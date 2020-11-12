@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>{{ challenge.commits_to_make }} Commits Challenge</title>
+    <title>{{ challenge.required_commit_count }} Commits Challenge</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
@@ -49,7 +49,7 @@
                 <p>Days left</p>
             </div>
             <div class="col-sm">
-                <p>{{ (challenge.end - challenge.today).days }}</p>
+                <p>{{ challenge.days_to_end }}</p>
             </div>
         </div>
         <div class="row">
@@ -57,7 +57,7 @@
                 <p>Commits left</p>
             </div>
             <div class="col-sm">
-                <p>{{ challenge.commits_to_make - challenge.commits_done }}</p>
+                <p>{{ stats.actual.commits_todo }}</p>
             </div>
         </div>
         <div class="row">
@@ -65,10 +65,10 @@
                 <p>Difference</p>
             </div>
             <div class="col-sm">
-                {% if challenge.commit_difference > 0 %}
-                <p>+{{ challenge.commit_difference }}</p>
+                {% if stats.commit_difference > 0 %}
+                <p>+{{ stats.commit_difference }}</p>
                 {% else %}
-                <p>{{ challenge.commit_difference }}</p>
+                <p>{{ stats.commit_difference }}</p>
                 {% endif %}
             </div>
         </div>
@@ -76,14 +76,14 @@
             <div class="col-sm">
                 <div style="position: relative; height: 50px;">
                     <div class="progress" style="position: absolute; width: 100%; top: 20px;">
-                        <div id="progress_percentage_bar" class="progress-bar progress-bar-success" style="width: {{ challenge.progress_percentage|int }}%;">
-                            {{ challenge.progress_percentage|int }}%
+                        <div id="progress_percentage_bar" class="progress-bar progress-bar-success" style="width: {{ stats.actual.percentage_done }}%;">
+                            {{ stats.actual.percentage_done|int }}%
                         </div>
                     </div>
 
-                    <div id="expected_progress_percentage_bar" class="label-line" style="left: {{challenge.expected_progress_percentage|int}}%">
+                    <div id="expected_progress_percentage_bar" class="label-line" style="left: {{ stats.expected.percentage_done }}%">
                         <span class="label-line-description">
-                          {{ challenge.expected_commit_count }} commits - {{ challenge.expected_progress_percentage|int }}%
+                          {{ stats.expected.commits_done }} commits - {{ stats.expected.percentage_done|int }}%
                         </span>
                     </div>
                 </div>

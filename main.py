@@ -1,14 +1,31 @@
 #!/usr/bin/env python
+from dataclasses import dataclass, field, InitVar
 from enum import Enum
+from math import ceil
+from typing import Optional, Dict, List
 
 from flask import Request, render_template, jsonify
 import datetime
 from pydantic import BaseSettings
 
 
+class ChallengeState(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    FINISHED = "finished"
+
+
+class ChallengeResult(str, Enum):
+    UNKNOWN = "unknown"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
 class AppSettings(BaseSettings):
     # Enable debug output (logging, additional messages, etc)
     DEBUG: bool = False
+
+    DEBUG_STATE: Optional[ChallengeState] = None
 
     # GitHub access token
     GITHUB_ACCESS_TOKEN: str
@@ -21,71 +38,134 @@ class AppSettings(BaseSettings):
     START_DATE: datetime.datetime = END_DATE - datetime.timedelta(days=REQUIRED_COMMIT_COUNT)
 
 
-class ChallengeStatus(Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    SUCCEEDED = "succeeded"
-    FAILED = "failed"
+@dataclass
+class ChallengeData:
+    required_commit_count: int
+    start_date: datetime.datetime
+    end_date: datetime.datetime
+    state: ChallengeState = field(init=False)
+    days_from_start: int = field(init=False)
+    days_to_end: int = field(init=False)
+    total_days: int = field(init=False)
+
+    today: InitVar[datetime.datetime]
+
+    def __post_init__(self, today: datetime.datetime):
+        if today < self.start_date:
+            self.state = ChallengeState.PENDING
+        elif today < self.end_date:
+            self.state = ChallengeState.IN_PROGRESS
+        else:
+            self.state = ChallengeState.FINISHED
+        self.days_from_start = (today - self.start_date).days
+        self.days_to_end = (self.end_date - today).days
+        self.total_days = (self.end_date - self.start_date).days
+
+
+@dataclass
+class ChallengeStatus:
+    commits_done: int
+    commits_todo: int
+    percentage_done: float
+
+
+@dataclass
+class ChallengeStatistics:
+    commits: List
+    actual: ChallengeStatus = field(init=False)
+    expected: ChallengeStatus = field(init=False)
+    result: ChallengeResult = field(init=False)
+    commit_difference: int = field(init=False)
+    challenge: InitVar[ChallengeData]
+
+    def __post_init__(self, challenge: ChallengeData):
+        commits_done = len(self.commits)
+        self.actual = ChallengeStatus(
+            commits_done=commits_done,
+            commits_todo=challenge.required_commit_count - commits_done,
+            percentage_done=100.0 * commits_done / challenge.required_commit_count
+        )
+
+        commits_per_day = challenge.required_commit_count / challenge.total_days
+        if challenge.state == ChallengeState.FINISHED:
+            commits_done = challenge.required_commit_count
+        elif challenge.state == ChallengeState.IN_PROGRESS:
+            commits_done = ceil(challenge.days_from_start * commits_per_day)
+        else:
+            commits_done = 0
+        self.expected = ChallengeStatus(
+            commits_done=commits_done,
+            commits_todo=challenge.required_commit_count - commits_done,
+            percentage_done=100.0 * commits_done / challenge.required_commit_count
+        )
+
+        if challenge.state in (ChallengeState.PENDING, ChallengeState.IN_PROGRESS):
+            self.result = ChallengeResult.UNKNOWN
+        else:
+            if self.actual.commits_done >= challenge.required_commit_count:
+                self.result = ChallengeResult.SUCCEEDED
+            else:
+                self.result = ChallengeResult.FAILED
+
+        self.commit_difference = self.actual.commits_done - self.expected.commits_done
 
 
 def on_request_received(req: Request):
-    if "days" in req.args:  # TODO: remove if not used
-        days_to_display = int(req.args["days"])
-        print(f"Looking only {days_to_display} days behind")
-        settings.END_DATE = datetime.datetime.now()
-        settings.START_DATE = settings.END_DATE - datetime.timedelta(days=days_to_display)
-
     print(f"Start date: {settings.START_DATE}")
     print(f"End date: {settings.END_DATE}")
 
     if settings.DEBUG:
-        commits = []
+        assert settings.DEBUG_STATE
+        challenge_data, stats = generate_fake_challenge_stats(settings.DEBUG_STATE)
     else:
+        challenge_data = ChallengeData(
+            required_commit_count=settings.REQUIRED_COMMIT_COUNT,
+            start_date=settings.START_DATE,
+            end_date=settings.END_DATE,
+            today=datetime.datetime.now()
+        )
         commits = fetch_commits()
-
-    commits_message = ""
-    for c in commits:
-        commits_message += f"{c.url}</br>"
-
-    today = datetime.datetime.now()
-
-    commits_per_day = settings.REQUIRED_COMMIT_COUNT / (settings.END_DATE - settings.START_DATE).days
-    challenge_days_done = (today - settings.START_DATE).days
-    commits_done = len(commits)
-    expected_commit_count = int(commits_per_day * challenge_days_done)
-
-    if today < settings.START_DATE:
-        # TODO: Before start there is no need to fetch commits
-        status = ChallengeStatus.PENDING
-        days_left = (settings.START_DATE - today).days
-    elif commits_done >= settings.REQUIRED_COMMIT_COUNT:
-        status = ChallengeStatus.SUCCEEDED
-        days_left = (today - settings.END_DATE).days
-    elif today < settings.END_DATE:
-        status = ChallengeStatus.IN_PROGRESS
-        days_left = (settings.END_DATE - today).days
-    else:
-        status = ChallengeStatus.FAILED
-        days_left = (today - settings.END_DATE).days
-
-    challenge_data = {
-        "today": today,
-        "start": settings.START_DATE,
-        "end": settings.END_DATE,
-        "days_left": days_left,
-        "progress_percentage": 100 * commits_done / settings.REQUIRED_COMMIT_COUNT,
-        "expected_progress_percentage": 100 * expected_commit_count / settings.REQUIRED_COMMIT_COUNT,
-        "expected_commit_count": expected_commit_count,
-        "commits_to_make": settings.REQUIRED_COMMIT_COUNT,
-        "commits_done": commits_done,
-        "commit_difference": commits_done - expected_commit_count,
-        "status": status.value
-    }
+        stats = ChallengeStatistics(challenge=challenge_data, commits=commits)
 
     if "json" in req.args:
-        return jsonify(challenge_data)
+        return jsonify({
+            "challenge": challenge_data,
+            "stats": stats
+        })
     else:
-        return render_template("index.jinja2.html", challenge=challenge_data, commits=commits)
+        return render_template("index.jinja2.html", challenge=challenge_data, stats=stats, debug=settings.DEBUG)
+
+
+def generate_fake_challenge_stats(state: ChallengeState, result: ChallengeResult = ChallengeResult.UNKNOWN) -> ChallengeStatistics:
+    if result != ChallengeResult.SUCCEEDED:
+        commits = [1, 2, 3]
+        required_commits = 5
+    else:
+        commits = [1, 2, 3, 4, 5, 6]
+        required_commits = 5
+
+    today = datetime.datetime.now()
+    if state == ChallengeState.PENDING:
+        start_date = today + datetime.timedelta(days=10)
+        end_date = today + datetime.timedelta(days=20)
+    elif state == ChallengeState.IN_PROGRESS:
+        start_date = today - datetime.timedelta(days=10)
+        end_date = today + datetime.timedelta(days=10)
+    elif state == ChallengeState.FINISHED:
+        start_date = today - datetime.timedelta(days=20)
+        end_date = today - datetime.timedelta(days=10)
+    else:
+        raise NotImplementedError()
+
+    challenge_data = ChallengeData(
+        required_commit_count=required_commits,
+        start_date=start_date,
+        end_date=end_date,
+        today=today
+    )
+
+    stats = ChallengeStatistics(challenge=challenge_data, commits=commits)
+    return challenge_data, stats
 
 
 def fetch_commits():
