@@ -3,7 +3,7 @@ import datetime
 from dataclasses import InitVar, dataclass, field
 from enum import Enum
 from math import ceil
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from flask import Request, jsonify, render_template
 from pydantic import BaseSettings
@@ -142,7 +142,7 @@ def on_request_received(req: Request):
 
 def generate_fake_challenge_stats(
     state: ChallengeState, result: ChallengeResult = ChallengeResult.UNKNOWN
-) -> ChallengeStatistics:
+) -> Tuple[ChallengeData, ChallengeStatistics]:
     if result != ChallengeResult.SUCCEEDED:
         commits = [1, 2, 3]
         required_commits = 5
