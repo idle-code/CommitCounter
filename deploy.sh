@@ -21,5 +21,3 @@ gcloud functions deploy \
   --memory=128MB \
   --env-vars-file=$ENV_YAML_FILE \
   --trigger-http
-
-

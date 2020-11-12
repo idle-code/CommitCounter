@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-from dataclasses import dataclass, field, InitVar
+import datetime
+from dataclasses import InitVar, dataclass, field
 from enum import Enum
 from math import ceil
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
-from flask import Request, render_template, jsonify
-import datetime
+from flask import Request, jsonify, render_template
 from pydantic import BaseSettings
 
 
@@ -35,7 +35,9 @@ class AppSettings(BaseSettings):
 
     # Challenge time range
     END_DATE: datetime.datetime = datetime.datetime.now()
-    START_DATE: datetime.datetime = END_DATE - datetime.timedelta(days=REQUIRED_COMMIT_COUNT)
+    START_DATE: datetime.datetime = END_DATE - datetime.timedelta(
+        days=REQUIRED_COMMIT_COUNT
+    )
 
 
 @dataclass
@@ -83,7 +85,7 @@ class ChallengeStatistics:
         self.actual = ChallengeStatus(
             commits_done=commits_done,
             commits_todo=challenge.required_commit_count - commits_done,
-            percentage_done=100.0 * commits_done / challenge.required_commit_count
+            percentage_done=100.0 * commits_done / challenge.required_commit_count,
         )
 
         commits_per_day = challenge.required_commit_count / challenge.total_days
@@ -96,7 +98,7 @@ class ChallengeStatistics:
         self.expected = ChallengeStatus(
             commits_done=commits_done,
             commits_todo=challenge.required_commit_count - commits_done,
-            percentage_done=100.0 * commits_done / challenge.required_commit_count
+            percentage_done=100.0 * commits_done / challenge.required_commit_count,
         )
 
         if challenge.state in (ChallengeState.PENDING, ChallengeState.IN_PROGRESS):
@@ -122,21 +124,25 @@ def on_request_received(req: Request):
             required_commit_count=settings.REQUIRED_COMMIT_COUNT,
             start_date=settings.START_DATE,
             end_date=settings.END_DATE,
-            today=datetime.datetime.now()
+            today=datetime.datetime.now(),
         )
         commits = fetch_commits()
         stats = ChallengeStatistics(challenge=challenge_data, commits=commits)
 
     if "json" in req.args:
-        return jsonify({
-            "challenge": challenge_data,
-            "stats": stats
-        })
+        return jsonify({"challenge": challenge_data, "stats": stats})
     else:
-        return render_template("index.jinja2.html", challenge=challenge_data, stats=stats, debug=settings.DEBUG)
+        return render_template(
+            "index.jinja2.html",
+            challenge=challenge_data,
+            stats=stats,
+            debug=settings.DEBUG,
+        )
 
 
-def generate_fake_challenge_stats(state: ChallengeState, result: ChallengeResult = ChallengeResult.UNKNOWN) -> ChallengeStatistics:
+def generate_fake_challenge_stats(
+    state: ChallengeState, result: ChallengeResult = ChallengeResult.UNKNOWN
+) -> ChallengeStatistics:
     if result != ChallengeResult.SUCCEEDED:
         commits = [1, 2, 3]
         required_commits = 5
@@ -161,7 +167,7 @@ def generate_fake_challenge_stats(state: ChallengeState, result: ChallengeResult
         required_commit_count=required_commits,
         start_date=start_date,
         end_date=end_date,
-        today=today
+        today=today,
     )
 
     stats = ChallengeStatistics(challenge=challenge_data, commits=commits)
@@ -170,6 +176,7 @@ def generate_fake_challenge_stats(state: ChallengeState, result: ChallengeResult
 
 def fetch_commits():
     from github import Github
+
     github = Github(settings.GITHUB_ACCESS_TOKEN)
 
     user = github.get_user()
@@ -187,13 +194,16 @@ def fetch_commits():
 
 
 def fetch_commits_in_repo(repo):
-    commits_in_repo = repo.get_commits(since=settings.START_DATE, until=settings.END_DATE, author=repo.owner)
+    commits_in_repo = repo.get_commits(
+        since=settings.START_DATE, until=settings.END_DATE, author=repo.owner
+    )
     print(f"Found {commits_in_repo.totalCount} commits in {repo}")
     return list(commits_in_repo)
 
 
 def serve_flask_endpoint(endpoint):
     from flask import Flask, request
+
     app = Flask(__name__)
     app.debug = True
     app.route("/")(lambda: endpoint(request))
@@ -206,6 +216,7 @@ def load_settings_from_environment() -> AppSettings:
 
 def load_settings_from_yaml(yaml_path: str) -> AppSettings:
     import yaml
+
     with open(yaml_path) as yaml_file:
         yaml_env = yaml.safe_load(yaml_file)
         return AppSettings(**yaml_env)
@@ -216,4 +227,3 @@ if __name__ == "__main__":
     serve_flask_endpoint(on_request_received)
 else:
     settings = load_settings_from_environment()
-
