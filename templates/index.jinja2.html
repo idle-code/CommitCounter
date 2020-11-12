@@ -10,6 +10,37 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <style type="text/css">
+
+.actual-progress-bar-container {
+    position: absolute;
+    width: 100%;
+    top: 20px;
+}
+.actual-progress-bar {
+    width: {{ stats.actual.percentage_done }}%;
+}
+.actual-progress-bar::after {
+    content: "{{ stats.actual.percentage_done|int }}%"
+}
+
+.expected-marker-container {
+    position: absolute;
+    float: right;
+    background: #000;
+    height: 40px;
+    width: 1px;
+    left: {{ stats.expected.percentage_done }}%;
+}
+.expected-marker-content {
+    position: absolute;
+    font-size: 8px;
+    right: 105%;
+    width: max-content;
+}
+.expected-marker-content::after {
+    content: "{{ stats.expected.commits_done }} commits - {{ stats.expected.percentage_done|int }}%"
+}
+
 .bar-step {
     position:absolute;
     margin-top:-20px;
@@ -19,21 +50,6 @@
 
 .label-txt {
     float: left;
-}
-
-.label-line {
-    position: absolute;
-    float: right;
-    background: #000;
-    height: 40px;
-    width: 1px;
-}
-
-.label-line-description {
-    position: absolute;
-    font-size: 8px;
-    right: 105%;
-    width: max-content;
 }
 
 .label-percent {
@@ -52,6 +68,7 @@
                 <p>{{ challenge.days_to_end }}</p>
             </div>
         </div>
+        {% if challenge.state == "in_progress" %}
         <div class="row">
             <div class="col-sm">
                 <p>Commits left</p>
@@ -72,24 +89,27 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
         <div class="row"><br>
             <div class="col-sm">
                 <div style="position: relative; height: 50px;">
-                    <div class="progress" style="position: absolute; width: 100%; top: 20px;">
-                        <div id="progress_percentage_bar" class="progress-bar progress-bar-success" style="width: {{ stats.actual.percentage_done }}%;">
-                            {{ stats.actual.percentage_done|int }}%
-                        </div>
+                    <div class="progress actual-progress-bar-container">
+                        {% if stats.result == "unknown" %}
+                        <div id="progress_percentage_bar" class="progress-bar bg-info progress-bar-striped actual-progress-bar"></div>
+                        {% elif stats.result == "succeeded" %}
+                        <div id="progress_percentage_bar" class="progress-bar bg-success progress-bar-striped actual-progress-bar"></div>
+                        {% else %}
+                        <div id="progress_percentage_bar" class="progress-bar bg-danger progress-bar-striped actual-progress-bar" role="progressbar"></div>
+                        {% endif %}
                     </div>
 
-                    <div id="expected_progress_percentage_bar" class="label-line" style="left: {{ stats.expected.percentage_done }}%">
-                        <span class="label-line-description">
-                          {{ stats.expected.commits_done }} commits - {{ stats.expected.percentage_done|int }}%
-                        </span>
+                    <div id="expected_progress_percentage_bar" class="expected-marker-container">
+                        <span class="expected-marker-content"></span>
                     </div>
                 </div>
             </div>
         </div>
-        <!--
+        {% if debug %}
         <div class="row">
             <div class="col-sm">
                 <label for="progress_percentage_slider">Progress percentage</label>
@@ -99,26 +119,24 @@
                 <input type="range" min="0" max="100" value="24" class="slider" id="expected_progress_percentage_slider">
             </div>
         </div>
-        -->
+        {% endif %}
     </div>
-    <!--
+    {% if debug %}
     <script type="text/javascript">
         $(document).ready(function() {
             var progress_percentage_slider = document.getElementById("progress_percentage_slider");
             var progress_percentage_bar = document.getElementById("progress_percentage_bar");
             progress_percentage_slider.oninput = function() {
                 $('#progress_percentage_bar').css('width', this.value + "%");
-                progress_percentage_bar.innerHTML = this.value + "%";
             }
 
             var expected_progress_percentage_slider = document.getElementById("expected_progress_percentage_slider");
             var expected_progress_percentage_bar = document.getElementById("expected_progress_percentage_bar");
             expected_progress_percentage_slider.oninput = function() {
                 $('#expected_progress_percentage_bar').css('left', this.value + "%");
-                //expected_progress_percentage_bar.innerHTML = this.value + "%";
             }
         });
     </script>
-    -->
+    {% endif %}
 </body>
 </html>

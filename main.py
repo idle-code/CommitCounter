@@ -26,6 +26,7 @@ class AppSettings(BaseSettings):
     DEBUG: bool = False
 
     DEBUG_STATE: Optional[ChallengeState] = None
+    DEBUG_RESULT: ChallengeResult = ChallengeResult.UNKNOWN
 
     # GitHub access token
     GITHUB_ACCESS_TOKEN: str
@@ -118,7 +119,9 @@ def on_request_received(req: Request):
 
     if settings.DEBUG:
         assert settings.DEBUG_STATE
-        challenge_data, stats = generate_fake_challenge_stats(settings.DEBUG_STATE)
+        challenge_data, stats = generate_fake_challenge_stats(
+            settings.DEBUG_STATE, settings.DEBUG_RESULT
+        )
     else:
         challenge_data = ChallengeData(
             required_commit_count=settings.REQUIRED_COMMIT_COUNT,
@@ -141,7 +144,7 @@ def on_request_received(req: Request):
 
 
 def generate_fake_challenge_stats(
-    state: ChallengeState, result: ChallengeResult = ChallengeResult.UNKNOWN
+    state: ChallengeState, result: ChallengeResult
 ) -> Tuple[ChallengeData, ChallengeStatistics]:
     if result != ChallengeResult.SUCCEEDED:
         commits = [1, 2, 3]
