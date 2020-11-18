@@ -41,6 +41,13 @@ class AppSettings(BaseSettings):
     )
 
 
+def total_days_between(
+    first_date: datetime.datetime, second_date: datetime.datetime
+) -> int:
+    total_seconds_between = (first_date - second_date).total_seconds()
+    return ceil(total_seconds_between / (24 * 60 * 60))
+
+
 @dataclass
 class ChallengeData:
     required_commit_count: int
@@ -60,9 +67,9 @@ class ChallengeData:
             self.state = ChallengeState.IN_PROGRESS
         else:
             self.state = ChallengeState.FINISHED
-        self.days_from_start = (today - self.start_date).days
-        self.days_to_end = (self.end_date - today).days
-        self.total_days = (self.end_date - self.start_date).days
+        self.days_from_start = total_days_between(today, self.start_date)
+        self.days_to_end = total_days_between(self.end_date, today)
+        self.total_days = total_days_between(self.end_date, self.start_date)
 
 
 @dataclass
@@ -74,7 +81,7 @@ class ChallengeStatus:
 
 @dataclass
 class ChallengeStatistics:
-    commits: List
+    commit_count: int
     actual: ChallengeStatus = field(init=False)
     expected: ChallengeStatus = field(init=False)
     result: ChallengeResult = field(init=False)
@@ -82,11 +89,12 @@ class ChallengeStatistics:
     challenge: InitVar[ChallengeData]
 
     def __post_init__(self, challenge: ChallengeData):
-        commits_done = len(self.commits)
         self.actual = ChallengeStatus(
-            commits_done=commits_done,
-            commits_todo=challenge.required_commit_count - commits_done,
-            percentage_done=100.0 * commits_done / challenge.required_commit_count,
+            commits_done=self.commit_count,
+            commits_todo=challenge.required_commit_count - self.commit_count,
+            percentage_done=min(
+                100.0 * self.commit_count / challenge.required_commit_count, 100.0
+            ),
         )
 
         commits_per_day = challenge.required_commit_count / challenge.total_days
@@ -99,16 +107,17 @@ class ChallengeStatistics:
         self.expected = ChallengeStatus(
             commits_done=commits_done,
             commits_todo=challenge.required_commit_count - commits_done,
-            percentage_done=100.0 * commits_done / challenge.required_commit_count,
+            percentage_done=min(
+                100.0 * commits_done / challenge.required_commit_count, 100.0
+            ),
         )
 
-        if challenge.state in (ChallengeState.PENDING, ChallengeState.IN_PROGRESS):
-            self.result = ChallengeResult.UNKNOWN
+        if self.actual.commits_done >= challenge.required_commit_count:
+            self.result = ChallengeResult.SUCCEEDED
+        elif challenge.state == ChallengeState.FINISHED:
+            self.result = ChallengeResult.FAILED
         else:
-            if self.actual.commits_done >= challenge.required_commit_count:
-                self.result = ChallengeResult.SUCCEEDED
-            else:
-                self.result = ChallengeResult.FAILED
+            self.result = ChallengeResult.UNKNOWN
 
         self.commit_difference = self.actual.commits_done - self.expected.commits_done
 
@@ -129,8 +138,8 @@ def on_request_received(req: Request):
             end_date=settings.END_DATE,
             today=datetime.datetime.now(),
         )
-        commits = fetch_commits()
-        stats = ChallengeStatistics(challenge=challenge_data, commits=commits)
+        commit_count = len(fetch_commits())
+        stats = ChallengeStatistics(challenge=challenge_data, commit_count=commit_count)
 
     if "json" in req.args:
         return jsonify({"challenge": challenge_data, "stats": stats})
@@ -147,10 +156,10 @@ def generate_fake_challenge_stats(
     state: ChallengeState, result: ChallengeResult
 ) -> Tuple[ChallengeData, ChallengeStatistics]:
     if result != ChallengeResult.SUCCEEDED:
-        commits = [1, 2, 3]
+        commits_done = 3
         required_commits = 5
     else:
-        commits = [1, 2, 3, 4, 5, 6]
+        commits_done = 6
         required_commits = 5
 
     today = datetime.datetime.now()
@@ -173,7 +182,7 @@ def generate_fake_challenge_stats(
         today=today,
     )
 
-    stats = ChallengeStatistics(challenge=challenge_data, commits=commits)
+    stats = ChallengeStatistics(challenge=challenge_data, commit_count=commits_done)
     return challenge_data, stats
 
 
