@@ -1,6 +1,7 @@
 .gcloudignore
 deploy.sh
 .env.yaml
+.env.yaml.template
 .git
 .gitignore
 .idea
@@ -8,3 +9,4 @@ poetry.lock
 pyproject.toml
 README.md
 .venv
+*.json

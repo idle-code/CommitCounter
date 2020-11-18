@@ -138,7 +138,10 @@ def on_request_received(req: Request):
             end_date=settings.END_DATE,
             today=datetime.datetime.now(),
         )
-        commit_count = len(fetch_commits())
+        if challenge_data.state == ChallengeState.PENDING:
+            commit_count = 0
+        else:
+            commit_count = len(fetch_commits())
         stats = ChallengeStatistics(challenge=challenge_data, commit_count=commit_count)
 
     if "json" in req.args:

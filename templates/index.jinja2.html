@@ -90,6 +90,16 @@ body {
 <body>
     <div class="container border border-white rounded shadow info-frame">
         <div class="row">
+            <div class="col text-center">
+                <h1>{{ challenge.required_commit_count }} Commits Challenge</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-center">
+                <h2>{{ challenge.start_date.date() }} - {{ challenge.end_date.date() }}</h2>
+            </div>
+        </div>
+        <div class="row">
             <div class="col text-right">
                 <p>Days left</p>
             </div>
