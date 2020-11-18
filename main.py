@@ -147,11 +147,19 @@ def on_request_received(req: Request):
     if "json" in req.args:
         return jsonify({"challenge": challenge_data, "stats": stats})
     else:
+        if stats.result == ChallengeResult.SUCCEEDED:
+            template_name = "succeeded.jinja2.html"
+        elif stats.result == ChallengeResult.FAILED:
+            template_name = "failed.jinja2.html"
+        elif challenge_data.state == ChallengeState.PENDING:
+            template_name = "pending.jinja2.html"
+        elif challenge_data.state == ChallengeState.IN_PROGRESS:
+            template_name = "in_progress.jinja2.html"
+        else:
+            raise NotImplementedError("Unknown status - cannot choose correct template")
+
         return render_template(
-            "index.jinja2.html",
-            challenge=challenge_data,
-            stats=stats,
-            debug=settings.DEBUG,
+            template_name, challenge=challenge_data, stats=stats, debug=settings.DEBUG,
         )
 
 

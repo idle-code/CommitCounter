@@ -1,0 +1,68 @@
+{% extends "base.jinja2.html" %}
+{% block content %}
+        <div class="row">
+            <div class="col text-right">
+                <p>Commits left</p>
+            </div>
+            <div class="col">
+                <p>{{ stats.actual.commits_todo }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-right">
+                <p>Difference</p>
+            </div>
+            <div class="col">
+                {% if stats.commit_difference > 0 %}
+                <p>+{{ stats.commit_difference }}</p>
+                {% else %}
+                <p>{{ stats.commit_difference }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div class="progress-bar-container">
+                    <div class="progress actual-progress-bar-container">
+                        <div id="progress_percentage_bar" class="progress-bar bg-info progress-bar-striped actual-progress-bar"></div>
+                    </div>
+
+                    <div id="expected_progress_percentage_bar" class="expected-marker-container">
+                        <span class="expected-marker-content"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if debug %}
+        <div class="row">
+            <div class="col-6">
+                <label for="progress_percentage_slider">Progress percentage</label>
+                <input type="range" min="0" max="100" value="24" class="slider" id="progress_percentage_slider">
+            </div>
+            <div class="col-6">
+                <label for="expected_progress_percentage_slider">Expected progress percentage</label>
+                <input type="range" min="0" max="100" value="24" class="slider" id="expected_progress_percentage_slider">
+            </div>
+        </div>
+        {% endif %}
+{% endblock content %}
+
+{% block scripts %}
+    {% if debug %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var progress_percentage_slider = document.getElementById("progress_percentage_slider");
+            var progress_percentage_bar = document.getElementById("progress_percentage_bar");
+            progress_percentage_slider.oninput = function() {
+                $('#progress_percentage_bar').css('width', this.value + "%");
+            }
+
+            var expected_progress_percentage_slider = document.getElementById("expected_progress_percentage_slider");
+            var expected_progress_percentage_bar = document.getElementById("expected_progress_percentage_bar");
+            expected_progress_percentage_slider.oninput = function() {
+                $('#expected_progress_percentage_bar').css('left', this.value + "%");
+            }
+        });
+    </script>
+    {% endif %}
+{% endblock scripts %}

@@ -1,0 +1,33 @@
+{% extends "base.jinja2.html" %}
+{% block content %}
+        <div class="row">
+            <div class="col text-right">
+                <p>Difference</p>
+            </div>
+            <div class="col">
+                {% if stats.commit_difference > 0 %}
+                <p>+{{ stats.commit_difference }}</p>
+                {% else %}
+                <p>{{ stats.commit_difference }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div class="progress-bar-container">
+                    <div class="progress actual-progress-bar-container">
+                        <div id="progress_percentage_bar" class="progress-bar bg-success w-100 progress-bar-striped actual-progress-bar"></div>
+                    </div>
+
+                    <div id="expected_progress_percentage_bar" class="expected-marker-container">
+                        <span class="expected-marker-content"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-center text-success">
+                <h1 style="-webkit-text-stroke: 1px white;">You have WON the challenge!</h1>
+            </div>
+        </div>
+{% endblock content %}
