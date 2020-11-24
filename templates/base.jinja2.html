@@ -93,7 +93,11 @@ body {
     <div class="container border border-white rounded shadow info-frame">
         <div class="row">
             <div class="col text-center">
-                <h1>{{ challenge.required_commit_count }} Commits Challenge</h1>
+                {% if challenge.repo %}
+                <h1>{{ challenge.required_commit_count }} commits in {{ challenge.repo }} challenge</h1>
+                {% else %}
+                <h1>{{ challenge.required_commit_count }} commits challenge</h1>
+                {% endif %}
             </div>
         </div>
         <div class="row">

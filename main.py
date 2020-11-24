@@ -6,6 +6,8 @@ from math import ceil
 from typing import Dict, List, Optional, Tuple
 
 from flask import Request, jsonify, render_template
+from github import Github
+from github.GithubException import UnknownObjectException
 from pydantic import BaseSettings
 
 
@@ -31,6 +33,9 @@ class AppSettings(BaseSettings):
     # GitHub access token
     GITHUB_ACCESS_TOKEN: str
 
+    # Repo (name) to track
+    GITHUB_REPO: Optional[str] = None
+
     # Commits required in challenge
     REQUIRED_COMMIT_COUNT: int = 365
 
@@ -53,12 +58,13 @@ class ChallengeData:
     required_commit_count: int
     start_date: datetime.datetime
     end_date: datetime.datetime
+    today: InitVar[datetime.datetime]
+    repo: Optional[str] = None
+
     state: ChallengeState = field(init=False)
     days_from_start: int = field(init=False)
     days_to_end: int = field(init=False)
     total_days: int = field(init=False)
-
-    today: InitVar[datetime.datetime]
 
     def __post_init__(self, today: datetime.datetime):
         if today < self.start_date:
@@ -137,9 +143,12 @@ def on_request_received(req: Request):
             start_date=settings.START_DATE,
             end_date=settings.END_DATE,
             today=datetime.datetime.now(),
+            repo=settings.GITHUB_REPO,
         )
         if challenge_data.state == ChallengeState.PENDING:
             commit_count = 0
+        elif settings.GITHUB_REPO:
+            commit_count = len(fetch_commits_in_repo(settings.GITHUB_REPO))
         else:
             commit_count = len(fetch_commits())
         stats = ChallengeStatistics(challenge=challenge_data, commit_count=commit_count)
@@ -198,29 +207,39 @@ def generate_fake_challenge_stats(
 
 
 def fetch_commits():
-    from github import Github
-
-    github = Github(settings.GITHUB_ACCESS_TOKEN)
-
-    user = github.get_user()
-    print(f"Looking for repos of user: {user}")
-    repositories = user.get_repos()
+    repositories = find_user_repositories()
     print(f"Found {repositories.totalCount} repositories")
 
     all_commits = []
     for repo in repositories:
-        commits_in_repo = fetch_commits_in_repo(repo)
-        all_commits.extend(commits_in_repo)
+        try:
+            commits_in_repo = fetch_commits_in_repo(repo.name)
+            all_commits.extend(commits_in_repo)
+        except UnknownObjectException:
+            print(f"Exception while fetching {repo}")
 
     print(f"Total commits in found all repositories: {len(all_commits)}")
     return all_commits
 
 
-def fetch_commits_in_repo(repo):
+def find_user_repositories():
+    github = Github(settings.GITHUB_ACCESS_TOKEN)
+    user = github.get_user()
+    print(f"Looking for repos of user: {user}")
+    repositories = user.get_repos()
+    return repositories
+
+
+def fetch_commits_in_repo(repo_name, author=None):
+    github = Github(settings.GITHUB_ACCESS_TOKEN)
+    user = github.get_user()
+    repo = user.get_repo(repo_name)
+    if author is None:
+        author = repo.owner
     commits_in_repo = repo.get_commits(
-        since=settings.START_DATE, until=settings.END_DATE, author=repo.owner
+        since=settings.START_DATE, until=settings.END_DATE, author=author
     )
-    print(f"Found {commits_in_repo.totalCount} commits in {repo}")
+    print(f"Found {commits_in_repo.totalCount} commits in {repo_name}")
     return list(commits_in_repo)
 
 
