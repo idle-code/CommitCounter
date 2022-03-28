@@ -20,4 +20,5 @@ gcloud functions deploy \
   --runtime python38 \
   --memory=128MB \
   --env-vars-file=$ENV_YAML_FILE \
+  --region europe-central2 \
   --trigger-http

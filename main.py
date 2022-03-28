@@ -33,7 +33,7 @@ class AppSettings(BaseSettings):
     # GitHub access token
     GITHUB_ACCESS_TOKEN: str
 
-    # Repo (name) to track
+    # Repository to track commits from; in "<user>/<repository>" format
     GITHUB_REPO: Optional[str] = None
 
     # Commits required in challenge
@@ -168,7 +168,10 @@ def on_request_received(req: Request):
             raise NotImplementedError("Unknown status - cannot choose correct template")
 
         return render_template(
-            template_name, challenge=challenge_data, stats=stats, debug=settings.DEBUG,
+            template_name,
+            challenge=challenge_data,
+            stats=stats,
+            debug=settings.DEBUG,
         )
 
 

@@ -18,18 +18,18 @@ repos:
 #    hooks:
 #    -   id: isort
 -   repo: https://github.com/timothycrosley/isort
-    rev: 'master'
+    rev: 'main'
     hooks:
     -    id: isort
          additional_dependencies:
          -   toml
--   repo: https://github.com/awebdeveloper/pre-commit-stylelint
-    rev: 'master'
-    hooks:
-    -   id: stylelint
-        additional_dependencies: ['stylelint@13.0.0', 'stylelint-config-recommended']
+#-   repo: https://github.com/awebdeveloper/pre-commit-stylelint
+#    rev: 'master'
+#    hooks:
+#    -   id: stylelint
+#        additional_dependencies: ['stylelint@13.0.0', 'stylelint-config-recommended']
 -   repo: https://github.com/psf/black
-    rev: stable
+    rev: 20.8b1
     hooks:
     -   id: black
         language_version: python3.8
